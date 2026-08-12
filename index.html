@@ -432,6 +432,7 @@ header{
 .field .hint,.hint{font-size:13px;color:var(--ink-soft);margin-top:5px}
 .ferror{color:#B3402F;font-size:13.5px;margin:-8px 0 14px;display:none}
 .ferror.show{display:block}
+.ferror a{color:#B3402F;text-decoration:underline}
 .fnav{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
 .fback{background:none;border:none;color:var(--ink-soft);font-family:var(--body);font-size:14.5px;
   cursor:pointer;padding:10px 4px}
@@ -773,6 +774,7 @@ footer{background:var(--ink);color:#B7B1A8;padding:56px 0 40px;font-size:14px}
             <span>I would like to receive expert skin tips from TSC Skin, seasonal skin health advice, new treatment news and exclusive patient offers. Unsubscribe any time with one click.</span></label>
         </div>
         <p class="ferror" id="err4">Please accept the terms &amp; conditions to send your enquiry.</p>
+        <p class="ferror" id="err5"></p>
         <div class="fnav"><button type="button" class="fback" data-back="4">&larr; Back</button>
           <button type="submit" class="btn">Send enquiry <span class="arr">&rarr;</span></button></div>
       </div>
@@ -1366,6 +1368,7 @@ enqForm.addEventListener("submit", async e => {
   if (!document.getElementById("fTerms").checked){
     document.getElementById("err4").classList.add("show"); return;
   }
+  const submitBtn = enqForm.querySelector('button[type="submit"]');
   const pref = [document.getElementById("prefPhone").checked ? "Phone" : "",
                 document.getElementById("prefEmail").checked ? "Email" : ""]
                .filter(Boolean).join(" & ");
@@ -1388,19 +1391,64 @@ enqForm.addEventListener("submit", async e => {
     marketing_opt_in: document.getElementById("fMarketing").checked ? "Yes" : "No",
     terms_accepted: "Yes",
   };
+
   if (FORM_ENDPOINT){
+    /* Formspree AJAX submission. FormData is used rather than JSON as it is the
+       format Formspree documents, and _subject / _replyto are its special fields. */
+    const fd = new FormData();
+    Object.entries(data).forEach(([k,v]) => fd.append(k, v));
+    fd.append("_subject", `New enquiry — ${data.first_name} ${data.last_name} (${data.clinic})`);
+    fd.append("_replyto", data.email);
+
+    submitBtn.disabled = true;
+    const originalLabel = submitBtn.innerHTML;
+    submitBtn.innerHTML = "Sending…";
+    document.getElementById("err5").classList.remove("show");
+
     try {
-      await fetch(FORM_ENDPOINT, { method:"POST",
-        headers:{ "Content-Type":"application/json", "Accept":"application/json" },
-        body: JSON.stringify(data) });
-      showEnqSuccess(); return;
-    } catch (err) { /* fall through to email */ }
+      const res = await fetch(FORM_ENDPOINT, {
+        method: "POST",
+        body: fd,
+        headers: { "Accept": "application/json" }
+      });
+      if (res.ok){
+        showEnqSuccess();
+      } else {
+        let detail = "";
+        try {
+          const j = await res.json();
+          if (j && j.errors) detail = j.errors.map(x => x.message).join(". ");
+        } catch (_) {}
+        showEnqError(detail, data);
+      }
+    } catch (err) {
+      showEnqError("", data);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalLabel;
+    }
+    return;
   }
-  const body = encodeURIComponent(
-    `Clinic: ${data.clinic}\nName: ${data.title} ${data.first_name} ${data.last_name}\nAge: ${data.age}\nCompleted by: ${data.completed_by}\nEnquirer: ${data.enquirer_name} (${data.relationship_to_patient})\nEmail: ${data.email}\nPhone: ${data.phone}\nPreferred contact: ${data.contact_preference}\nReason: ${data.reason}\nFunding: ${data.funding}\nInsurer: ${data.insurer}\nMarketing opt-in: ${data.marketing_opt_in}\n\n${data.message}`);
-  window.location.href = `mailto:${SITE.email}?subject=${encodeURIComponent("New enquiry — " + data.first_name + " " + data.last_name)}&body=${body}`;
+
+  /* No endpoint configured — fall back to the patient's own email app */
+  window.location.href = mailtoLink(data);
   showEnqSuccess();
 });
+
+/* Builds a pre-filled email as a fallback route */
+function mailtoLink(data){
+  const body = encodeURIComponent(
+    `Clinic: ${data.clinic}\nName: ${data.title} ${data.first_name} ${data.last_name}\nAge: ${data.age}\nCompleted by: ${data.completed_by}\nEnquirer: ${data.enquirer_name} (${data.relationship_to_patient})\nEmail: ${data.email}\nPhone: ${data.phone}\nPreferred contact: ${data.contact_preference}\nReason: ${data.reason}\nFunding: ${data.funding}\nInsurer: ${data.insurer}\nMarketing opt-in: ${data.marketing_opt_in}\n\n${data.message}`);
+  return `mailto:${SITE.email}?subject=${encodeURIComponent("New enquiry — " + data.first_name + " " + data.last_name)}&body=${body}`;
+}
+
+/* Shown if the enquiry could not be sent — never leaves the patient guessing */
+function showEnqError(detail, data){
+  const box = document.getElementById("err5");
+  box.innerHTML = `We couldn't send your enquiry just now${detail ? " (" + detail + ")" : ""}. ` +
+    `Please try again, or <a href="${mailtoLink(data)}">email us directly</a>.`;
+  box.classList.add("show");
+}
 function showEnqSuccess(){
   enqForm.style.display = "none";
   document.getElementById("enqProgress").style.display = "none";
