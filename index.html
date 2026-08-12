@@ -881,15 +881,15 @@ const SERVICES = [
    ------------------------------------------------------------------ */
 /* ------------------------------------------------------------------
    ENQUIRY FORM — where submissions go.
-   Option A (recommended): create a free account at formspree.io,
-   make a form, and paste its endpoint here, e.g.
-   const FORM_ENDPOINT = "https://formspree.io/f/abcdwxyz";
-   Enquiries then arrive in your inbox AND are stored in a
-   dashboard you can export — no email app needed by the patient.
-   Option B: leave it as "" and the form falls back to opening the
-   patient's email app with everything pre-filled to SITE.email.
+   Enquiries are sent to the Formspree form below, which emails them
+   to enquiry@tscskin.com and keeps an exportable copy in the
+   Formspree dashboard.
+   To change where enquiries go, log in at formspree.io and update
+   the form's recipient — the address below does not need changing.
+   If this is ever set to "", the form falls back to opening the
+   patient's own email app with everything pre-filled instead.
    ------------------------------------------------------------------ */
-const FORM_ENDPOINT = "";
+const FORM_ENDPOINT = "https://formspree.io/f/xyegjngk";
 
 /* Reasons shown in the enquiry form dropdown, listed A–Z.
    "Other" is added automatically at the end. */
