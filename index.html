@@ -4,9 +4,42 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TSC Skin | Your Skin. Our Specialty.</title>
-<meta name="description" content="Consultant-led dermatology and skin aesthetics in London. Your skin. Our specialty.">
+<meta name="description" content="Consultant-led dermatology, laser and aesthetic clinic with Dr Tanveer Chohan, Consultant Dermatologist on the GMC Specialist Register. Clinics in Birmingham, Solihull and Shrewsbury.">
+<meta name="author" content="TSC Skin">
+<link rel="canonical" href="https://tscskin.com/">
+<meta property="og:title" content="TSC Skin | Your Skin. Our Specialty.">
+<meta property="og:description" content="Consultant-led dermatology, laser and aesthetic care in Birmingham, Solihull and Shrewsbury.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tscskin.com/">
+<meta property="og:image" content="https://tscskin.com/images/share-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="TSC Skin">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="images/favicon.png">
 <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<!-- Google tag (gtag.js) with Consent Mode — analytics storage is denied
+     until the visitor accepts cookies in the banner. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent', 'default', {
+    'ad_storage': 'denied',
+    'ad_user_data': 'denied',
+    'ad_personalization': 'denied',
+    'analytics_storage': 'denied',
+    'wait_for_update': 500
+  });
+  try {
+    if (localStorage.getItem('tsc-cookie-consent') === 'accepted'){
+      gtag('consent', 'update', { 'analytics_storage': 'granted' });
+    }
+  } catch(e){}
+  gtag('js', new Date());
+  gtag('config', 'G-9X5MXCHZ3C', { 'anonymize_ip': true });
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-9X5MXCHZ3C"></script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=Playfair+Display:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
@@ -462,6 +495,28 @@ header{
 .check.consent a{color:var(--accent);text-decoration:underline}
 @media(max-width:560px){.modal{padding:30px 22px 26px}.field.trio{flex-direction:column}.field.trio > div{flex:1 1 auto!important}}
 
+/* ---------- cookie banner ---------- */
+.cookie-banner{position:fixed;left:0;right:0;bottom:0;z-index:95;display:none;
+  background:var(--porcelain);border-top:1px solid var(--line);
+  box-shadow:0 -6px 24px rgba(23,34,44,.10)}
+.cookie-banner.show{display:block}
+.cookie-inner{max-width:var(--maxw);margin:0 auto;padding:18px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:26px;flex-wrap:wrap}
+.cookie-text{font-size:14.5px;color:var(--ink-soft);margin:0;max-width:640px}
+.cookie-text a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.cookie-actions{display:flex;gap:10px;flex-shrink:0}
+.cookie-btn{font-family:var(--body);font-size:14px;font-weight:500;cursor:pointer;
+  padding:11px 22px;border-radius:var(--radius);border:1.5px solid var(--accent);
+  background:var(--accent);color:#fff;transition:background .2s,color .2s}
+.cookie-btn:hover{background:var(--accent-deep);border-color:var(--accent-deep)}
+.cookie-btn.ghost{background:none;color:var(--accent)}
+.cookie-btn.ghost:hover{background:var(--accent-mist);border-color:var(--accent);color:var(--accent)}
+@media(max-width:700px){
+  .cookie-inner{padding:16px 20px;gap:14px}
+  .cookie-actions{width:100%}
+  .cookie-btn{flex:1;padding:13px 16px}
+}
+
 /* ---------- footer ---------- */
 footer{background:var(--ink);color:#B7B1A8;padding:56px 0 40px;font-size:14px}
 .foot{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
@@ -784,6 +839,19 @@ footer{background:var(--ink);color:#B7B1A8;padding:56px 0 40px;font-size:14px}
       <div class="tick">&#10003;</div>
       <h3>Thank you</h3>
       <p class="modal-sub">Your enquiry has been sent. We'll be in touch as soon as possible to arrange your consultation.</p>
+    </div>
+  </div>
+</div>
+
+<div class="cookie-banner" id="cookieBanner" role="dialog" aria-live="polite"
+     aria-label="Cookie preferences">
+  <div class="cookie-inner">
+    <p class="cookie-text">We use cookies to understand how visitors use our website, so we can
+      improve it. These are optional &mdash; the site works without them. See our
+      <a href="privacy.html">privacy notice</a>.</p>
+    <div class="cookie-actions">
+      <button type="button" class="cookie-btn ghost" id="cookieReject">Reject</button>
+      <button type="button" class="cookie-btn" id="cookieAccept">Accept</button>
     </div>
   </div>
 </div>
@@ -1204,6 +1272,27 @@ document.getElementById("footSocial").innerHTML = Object.entries(SITE.social)
   .join("");
 document.getElementById("footLine").textContent = SITE.footer;
 
+
+/* ---------- Cookie consent ---------- */
+(function(){
+  const banner = document.getElementById("cookieBanner");
+  const KEY = "tsc-cookie-consent";
+  function stored(){ try { return localStorage.getItem(KEY); } catch(e){ return null; } }
+  function save(v){ try { localStorage.setItem(KEY, v); } catch(e){} }
+
+  if (!stored()) setTimeout(() => banner.classList.add("show"), 900);
+
+  document.getElementById("cookieAccept").addEventListener("click", () => {
+    save("accepted");
+    if (typeof gtag === "function") gtag('consent','update',{ 'analytics_storage':'granted' });
+    banner.classList.remove("show");
+  });
+  document.getElementById("cookieReject").addEventListener("click", () => {
+    save("rejected");
+    if (typeof gtag === "function") gtag('consent','update',{ 'analytics_storage':'denied' });
+    banner.classList.remove("show");
+  });
+})();
 
 /* ---------- Enquiry modal ---------- */
 const enqModal = document.getElementById("enquiryModal");
